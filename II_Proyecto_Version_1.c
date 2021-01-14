@@ -4,7 +4,7 @@
 #include <string.h>
 #include <time.h>
 
-//------------------------------------STRUCT NIÑOS-----------------------------------
+//------------------------------------STRUCT NIÃ‘OS-----------------------------------
 //Estructura general de los ninos 
 /*Entradas: Nivel de acceso, nombre, cedula, correo y demas datos de cada miembro
 Salidas: un nuevo nodo en lista Simple 
@@ -586,7 +586,7 @@ int modificar_Ayudante()
 		}
 		else if (dato==4)
 		{
-			printf("Describa las funciones que desempeña: ");
+			printf("Describa las funciones que desempeÃ±a: ");
 			fflush(stdin);
 			scanf("%[^\n]", &actual->funcs);
 		}
@@ -996,7 +996,7 @@ int main (void)
 		printf("\n\t\t|  2. Registro de ayudantes de Santa  |");
 		printf("\n\t\t|  3. Registro de juguetes            |");
 		printf("\n\t\t|  4. Lugares de domicilio            |");
-		printf("\n\t\t|  5. Registro comportamiento de niños|");
+		printf("\n\t\t|  5. Registro comportamiento de niÃ±os|");
 		printf("\n\t\t|  6. Carta a Santa                   |");
 		printf("\n\t\t|  7. Procesar cartas para Santa      |");
 		printf("\n\t\t|  8. Entregar regalos                |");
