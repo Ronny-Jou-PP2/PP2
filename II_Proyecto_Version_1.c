@@ -861,6 +861,366 @@ int Ayudantes()
 	}
 }	
 
+//------------------------------------STRUCT JUGUETES-----------------------------------
+struct juguete
+{
+    int codigo, min, max, costo, cant; //juguete will store an integer
+    char nombre[30], desc[100], categoria[30];
+	struct juguete *hijo_der; // hijo_der child
+    struct juguete *hijo_izq; // hijo_izq child
+}*root=NULL;
+typedef struct juguete jug;
+
+
+//NUEVO JUGUETE//
+struct juguete* nuevoJuguete(int cod, char *nombre, char *desc, char *categoria, int max, int min, int costo)
+{
+    struct juguete *nuevo;
+    nuevo = malloc(sizeof(struct juguete));
+    
+    nuevo->codigo=cod;
+    strcpy(nuevo->nombre, nombre);
+    strcpy(nuevo->desc, desc);
+	strcpy(nuevo->categoria, categoria);
+    nuevo->max=max;
+    nuevo->min=min;
+    nuevo->costo=costo;
+    
+    nuevo->hijo_izq = NULL;
+    nuevo->hijo_der = NULL;
+
+    return nuevo;
+}
+
+struct juguete* insertarJuguete(struct juguete *root, int cod, char *nombre, char *desc, char *categoria, int max, int min, int costo)
+{
+    //searching for the place to insertarJuguete
+    if(root==NULL)
+    {
+    	return nuevoJuguete(cod, nombre, desc, categoria, max, min, costo);
+	}   
+    else if(cod>root->codigo) // cod is greater. Should be inserted to hijo_der
+    {
+    	root->hijo_der=insertarJuguete(root->hijo_der, cod, nombre, desc, categoria, max, min, costo);
+	}   
+    else // cod is smaller should be inserted to hijo_izq
+    {
+    	root->hijo_izq = insertarJuguete(root->hijo_izq,cod, nombre, desc, categoria, max, min, costo);
+	}
+    return root;
+}
+
+
+//MOSTRAR TODOS LOS JUGUETES//
+void mostrarJuguetes(struct juguete *root)//recorrido inorden
+{
+    if(root!=NULL) // checking if the root is not null
+    {
+        mostrarJuguetes(root->hijo_izq); // visiting hijo_izq child
+        
+        printf("\tJUG-0%d\n", root->codigo); // printing codigo at root
+        printf("\tNombre: %s\n", root->nombre);
+        printf("\tCategoria: %s\n", root->categoria);
+        printf("\tDescripcion: %s\n", root->desc);
+        printf("\tRango de edad recomendado: %d-%d\n\n", root->min, root->max);
+        
+        mostrarJuguetes(root->hijo_der);// visiting hijo_der child
+    }
+}
+
+//MODIFICAR DATOS JUGUETE//
+void modificarJug(jug *root, char *juguete) //BUSCAR UN JUGUETE
+{
+	int dato;
+	char elecc[3]="Si";
+	
+    if (root!=NULL) 
+	{ 
+        /* If root is not NULL... */
+
+        /* recursively process hijo_izq subtree if present.. */
+        if (root->hijo_izq) 
+        {
+        	modificarJug(root->hijo_izq, juguete);
+		}
+		
+        /* then check the current node.. */
+        if (strstr(root->nombre, juguete)) 
+		{
+            printf("\n\tJUG-0%d\n", root->codigo); // printing codigo at root
+	        printf("\t(1)Nombre: %s\n", root->nombre);
+	        printf("\t(2)Categoria: %s\n", root->categoria);
+	        printf("\t(3)Descripcion: %s\n", root->desc);
+	        printf("\t(4)Rango de edad recomendado: %d-%d\n", root->min, root->max);
+	        printf("\t(5)Costo total del juguete: $%d\n\n", root->costo);
+	        
+	        while (strcmp(elecc,"si")==0 || strcmp(elecc,"Si")==0)
+	        {
+	        	printf("\nDigite el numero correspondiente al dato que desea modificar: ");
+				scanf("%i",&dato);
+				while(dato<0)
+		        {
+		            printf("\nDigite nuevamente el numero de dato a modificar: ");
+		            fflush(stdin);
+		            scanf("%i", &dato);
+		        }
+					
+				if (dato==1)
+				{
+					printf("Digite el nuevo nombre del juguete: ");
+					fflush(stdin);
+					scanf("%[^\n]", &root->nombre);
+				}
+				else if (dato==2)
+				{
+					printf("Digite la nueva categoria del juguete: ");
+					fflush(stdin);
+					scanf("%[^\n]", &root->categoria);
+				}
+				else if (dato==3)
+				{
+					printf("Digite la descripcion del juguete: ");
+					fflush(stdin);
+					scanf("%[^\n]", &root->desc);
+				}
+				else if (dato==4)
+				{
+					printf("Edad MAXIMA recomendada para utilizar el juguete: ");
+					scanf("%i", &root->max);
+					
+					printf("Edad MINIMA recomendada para utilizar el juguete: "); 
+					scanf("%i", &root->min);
+					while (root->min>root->max)
+					{
+						printf(">>Digite nuevamente la edad MINIMA para utilizar el juguete: ");
+						scanf("%i", &root->min);
+					}
+				}
+				else if (dato==5)
+				{
+					printf("Costo total de fabricacion: $");
+					scanf("%d",&root->costo);
+				}
+				printf("Si desea modificar otro dato, digite 'Si', digite 'No' en caso contrario: ");
+				scanf("%s",&elecc);
+			}
+        }
+
+        /* then recursively process the hijo_der subtree if present. */
+        if (root->hijo_der) 
+        {
+        	modificarJug(root->hijo_der, juguete);
+		}
+    } 
+	else
+	{
+		printf("No hay juguetes!");
+	}
+}
+
+//function to find the minimum value in a juguete
+struct juguete* find_minimum(struct juguete *root)
+{
+    if(root == NULL)
+    {
+    	return NULL;
+	}
+    else if(root->hijo_izq != NULL) // juguete with minimum value will have no hijo_izq child
+    {
+    	return find_minimum(root->hijo_izq); // hijo_izq most element will be minimum
+	}
+    return root;
+}
+//ELIMINAR JUGUETE//
+struct juguete* eliminarJug(struct juguete *root, int cod)
+{
+    //searching for the item to be deleted
+    if(root==NULL)
+        return NULL;
+    if (cod>root->codigo)
+        root->hijo_der = eliminarJug(root->hijo_der, cod);
+    else if(cod<root->codigo)
+        root->hijo_izq = eliminarJug(root->hijo_izq, cod);
+    else
+    {
+        //No Children
+        if(root->hijo_izq==NULL && root->hijo_der==NULL)
+        {
+            root=NULL;
+        }
+
+        //One Child
+        else if(root->hijo_izq==NULL || root->hijo_der==NULL)
+        {
+            struct juguete *temp;
+            if(root->hijo_izq==NULL)
+            {
+            	temp = root->hijo_der;
+			}
+            else
+            {
+            	temp = root->hijo_izq;
+			}
+            root=NULL;
+        }
+
+        //Two Children
+        else
+        {
+            struct juguete *temp = find_minimum(root->hijo_der);
+            root->codigo = temp->codigo;
+            root->hijo_der = eliminarJug(root->hijo_der, temp->codigo);
+        }
+    }
+    return root;
+}
+
+int obtener_cod(jug *root, char *juguete) //BUSCAR UN JUGUETE
+{
+	int dato;
+	
+    if (root!=NULL) 
+	{ 
+        /* If root is not NULL... */
+
+        /* recursively process hijo_izq subtree if present.. */
+        if (root->hijo_izq) 
+        {
+        	obtener_cod(root->hijo_izq, juguete);
+		}
+		
+        /* then check the current node.. */
+        if (strstr(root->nombre, juguete)) 
+		{
+            return (root->codigo);
+        }
+
+        /* then recursively process the hijo_der subtree if present. */
+        if (root->hijo_der) 
+        {
+        	obtener_cod(root->hijo_der, juguete);
+		}
+    } 
+	else
+	{
+		printf("No hay juguetes!");
+	}
+}
+
+int Juguetes(void)
+{
+	system("color 04");
+	int opc=-1, min=-1, max=-1, costo=-1, cod=-1;
+	char nombre[30], categoria[30], desc[100]; 
+	
+	struct juguete *root;
+    root=nuevoJuguete(10, "Mazo de naipes", "Juego clasico de cartas", "Juegos de mesa", 99, 7, 3);
+	
+	while(opc!=5)
+	{
+	    printf("\n\t\t___________________________________");
+	    printf("\n\t\t|            >>JUGUETES<<         |");
+		printf("\n\t\t|  1. Agregar juguete             |");
+		printf("\n\t\t|  2. Mostrar juguetes            |");
+	    printf("\n\t\t|  3. Modificar datos de juguete  |");
+		printf("\n\t\t|  4. Eliminar juguete            |");
+	    printf("\n\t\t|  5. Volver al menu principal    |");
+	    printf("\n\t\t|_________________________________|");
+		printf("\n\nDigite el numero de la opcion a revisar:  ");
+	    scanf("%d",&opc);
+	    while(opc<0)
+        {
+            printf("\nDigite nuevamente la opcion a revisar: ");
+            fflush(stdin);
+            scanf("%d", &opc);
+        }
+
+		if(opc==1)
+		{
+			printf("Ingrese el codigo: JUG-0");
+			scanf("%i", &cod);
+			while(cod<0)
+            {
+                printf("\nDigite nuevamente el codigo: JUG-0");
+                fflush(stdin);
+                scanf("%i", &cod);
+            }
+			
+			printf("Ingrese el nombre del juguete: ");
+			fflush(stdin); //limpia buffer de espacios y saltos
+			scanf("%[^\n]",&nombre);
+			
+			printf("Categoria: ");
+			fflush(stdin);
+			scanf("%[^\n]", &categoria);
+			
+			printf("Descripcion del juguete: ");
+			fflush(stdin);
+			scanf("%[^\n]", &desc);
+				
+			printf(">>Digite el numero que corresponde a lo que se le solicita a continuacion<<\n");
+			printf("Edad MAXIMA recomendada para utilizar el juguete: ");
+			scanf("%i", &max); 
+			while(max<0)
+            {
+                printf("\nEdad MAXIMA recomendada para utilizar el juguete (numero): ");
+                fflush(stdin);
+                scanf("%i", &max);
+            }
+			printf("Edad MINIMA recomendada para utilizar el juguete: ");
+			scanf("%i", &min);
+			while(min<0)
+            {
+                printf("\nEdad MINIMA recomendada para utilizar el juguete (numero): ");
+                fflush(stdin);
+                scanf("%i", &min);
+            }
+			while (min>max)
+			{
+				printf(">>Digite nuevamente la edad MINIMA para utilizar el juguete: ");
+				scanf("%i", &min);
+				while(min<0)
+	            {
+	                printf("\nEdad MINIMA recomendada para utilizar el juguete (numero): ");
+	                fflush(stdin);
+	                scanf("%i", &min);
+	            }
+			}
+			
+			printf("Costo total de fabricacion del juguete: $");
+			scanf("%i", &costo);
+			while(costo<0)
+            {
+                printf("\nDigite nuevamente el costo de fabricacion del juguete: $");
+                fflush(stdin);
+                scanf("%i", &costo);
+            }
+			 
+			insertarJuguete(root, cod, nombre, desc, categoria, max, min, costo);
+			printf("\n**Muy bien! Se ha logrado registrar el nuevo juguete con exito!**\n");
+		}
+		else if(opc==2)
+		{
+			mostrarJuguetes(root);
+		}
+		else if(opc==3)
+		{
+			printf("Digite el nombre del juguete del cual desea modificar sus datos: ");
+			fflush(stdin);
+			scanf("%[^\n]", &nombre);
+			modificarJug(root, nombre);
+		}
+		else if(opc==4)
+		{
+			printf("Digite el nombre del juguete: ");
+			fflush(stdin);
+			scanf("%[^\n]", &nombre);
+			eliminarJug(root, obtener_cod(root, nombre));
+		}
+	}
+    return 0;
+}
+
 
 /*------------------------------------STRUCT COMPORTAMIENTOS-----------------------------------
 Estructura general de los comportamientos 
