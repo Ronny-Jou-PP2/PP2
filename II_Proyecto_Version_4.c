@@ -509,7 +509,7 @@ Restricciones: Solo tiene puntero a siguiente */
 typedef struct ayudante
 {
 	char nombre[30], cedula[30], puesto[30], funcs[100];
-	int dia, mes, anio;
+	int dia, mes, anio, cartasXAyud;
 	struct ayudante* sig_Ayudante;
 } ayudante;
 
@@ -530,9 +530,10 @@ int nuevoAyudante(char *cedula, char  *nombre, char *puesto,char *funcs, int dia
     strcpy(nuevo->funcs, funcs);
     nuevo->dia=dia;
     nuevo->mes=mes;
-    nuevo->anio=anio;  
+    nuevo->anio=anio;
+    nuevo->cartasXAyud=0;
     
-	if(primer_Ayudante==NULL)	
+	if(primer_Ayudante==NULL)
 	{
 		primer_Ayudante=nuevo;
 		primer_Ayudante->sig_Ayudante=NULL;
@@ -1049,7 +1050,7 @@ void modificarJug(jug *root, char *juguete) //BUSCAR UN JUGUETE
 		}
 		
         /* then check the current node.. */
-        if (strcmp(root->nombre, juguete)) 
+        if (strcmp(root->nombre, juguete)==0) 
 		{
             printf("\n\tJUG-0%d\n", root->codigo); // printing codigo at root
 	        printf("\t(1)Nombre: %s\n", root->nombre);
@@ -1143,53 +1144,54 @@ struct juguete* eliminarJug(struct juguete *root, int cod)
     if(root!=NULL)
     {
 
-                //searching for the item to be deleted
-                if(root==NULL)
-                    return NULL;
-                if (cod>root->codigo)
-                    root->hijo_der = eliminarJug(root->hijo_der, cod);
-                else if(cod<root->codigo)
-                    root->hijo_izq = eliminarJug(root->hijo_izq, cod);
+        //searching for the item to be deleted
+        if(root==NULL)
+            return NULL;
+        if (cod>root->codigo)
+            root->hijo_der = eliminarJug(root->hijo_der, cod);
+        else if(cod<root->codigo)
+            root->hijo_izq = eliminarJug(root->hijo_izq, cod);
+        else
+        {
+            //No Children
+            if(root->hijo_izq==NULL && root->hijo_der==NULL)
+            {
+                root=NULL;
+            }
+
+            //One Child
+            else if(root->hijo_izq==NULL || root->hijo_der==NULL)
+            {
+                struct juguete *temp;
+                if(root->hijo_izq==NULL)
+                {
+                    temp = root->hijo_der;
+                }
                 else
                 {
-                    //No Children
-                    if(root->hijo_izq==NULL && root->hijo_der==NULL)
-                    {
-                        root=NULL;
-                    }
-
-                    //One Child
-                    else if(root->hijo_izq==NULL || root->hijo_der==NULL)
-                    {
-                        struct juguete *temp;
-                        if(root->hijo_izq==NULL)
-                        {
-                            temp = root->hijo_der;
-                        }
-                        else
-                        {
-                            temp = root->hijo_izq;
-                        }
-                        root=NULL;
-                    }
-
-                    //Two Children
-                    else
-                    {
-                        struct juguete *temp = find_minimum(root->hijo_der);
-                        root->codigo = temp->codigo;
-                        root->hijo_der = eliminarJug(root->hijo_der, temp->codigo);
-                    }
-                    printf("\nJuguete eliminado con exito");
-                    encontrado=1;
+                    temp = root->hijo_izq;
                 }
-                return root;
+                root=NULL;
             }
+
+            //Two Children
+            else
+            {
+                struct juguete *temp = find_minimum(root->hijo_der);
+                root->codigo = temp->codigo;
+                root->hijo_der = eliminarJug(root->hijo_der, temp->codigo);
+            }
+            printf("\nJuguete eliminado con exito");
+            encontrado=1;
+        }
+        return root;
+        }
     else
     {
         printf("\nEl juguete no fue encontrado\n\n");
     }
 }
+
 int obtener_cod(jug *root, char *juguete) //BUSCAR UN JUGUETE
 {
 	int dato;
@@ -1227,9 +1229,6 @@ void Juguetes(jug *root)
 	system("color 04");
 	int opc=-1, min=-1, max=-1, costo=-1, cod=-1;
 	char nombre[30], categoria[30], desc[100]; 
-	
-	//struct juguete *root;
-    //root=nuevoJuguete(10, "Mazo de cartas", "Juego clasico de cartas", "Juegos de mesa", 99, 7, 3);
 	
 	while(opc!=5)
 	{
@@ -1341,6 +1340,7 @@ void Juguetes(jug *root)
 		}
 	}
 }
+
 
 
 /*------------------------------------STRUCT COMPORTAMIENTOS-----------------------------------
@@ -1513,9 +1513,11 @@ int nuevaCarta(char *cedula, char  *nombreNino, int anio) //Funcion para inserta
 /*Entradas: menu general del miembros 
 Salidas: todas las opciones de MIEMBROS
 Restricciones: solo datos de miembros */
-
 void buscarJug(jug *root, char *juguete) //BUSCAR UN JUGUETE
 {
+	int dato;
+	char elecc[3]="Si";
+	
     if (root!=NULL) 
 	{ 
         /* If root is not NULL... */
@@ -1523,11 +1525,97 @@ void buscarJug(jug *root, char *juguete) //BUSCAR UN JUGUETE
         /* recursively process hijo_izq subtree if present.. */
         if (root->hijo_izq) 
         {
-        	modificarJug(root->hijo_izq, juguete);
+        	buscarJug(root->hijo_izq, juguete);
 		}
 		
         /* then check the current node.. */
-        if (strstr(root->nombre, juguete)) 
+        if (strcmp(root->nombre, juguete)==0) 
+		{
+            printf("\n\tJUG-0%d\n", root->codigo); // printing codigo at root
+	        printf("\t(1)Nombre: %s\n", root->nombre);
+	        printf("\t(2)Categoria: %s\n", root->categoria);
+	        printf("\t(3)Descripcion: %s\n", root->desc);
+	        printf("\t(4)Rango de edad recomendado: %d-%d\n", root->min, root->max);
+	        printf("\t(5)Costo total del juguete: $%d\n\n", root->costo);
+	        
+	        while (strcmp(elecc,"si")==0 || strcmp(elecc,"Si")==0)
+	        {
+	        	printf("\nDigite el numero correspondiente al dato que desea modificar: ");
+				scanf("%i",&dato);
+				while(dato<0)
+		        {
+		            printf("\nDigite nuevamente el numero de dato a modificar: ");
+		            fflush(stdin);
+		            scanf("%i", &dato);
+		        }
+					
+				if (dato==1)
+				{
+					printf("Digite el nuevo nombre del juguete: ");
+					fflush(stdin);
+					scanf("%[^\n]", &root->nombre);
+				}
+				else if (dato==2)
+				{
+					printf("Digite la nueva categoria del juguete: ");
+					fflush(stdin);
+					scanf("%[^\n]", &root->categoria);
+				}
+				else if (dato==3)
+				{
+					printf("Digite la descripcion del juguete: ");
+					fflush(stdin);
+					scanf("%[^\n]", &root->desc);
+				}
+				else if (dato==4)
+				{
+					printf("Edad MAXIMA recomendada para utilizar el juguete: ");
+					scanf("%i", &root->max);
+					
+					printf("Edad MINIMA recomendada para utilizar el juguete: "); 
+					scanf("%i", &root->min);
+					while (root->min>root->max)
+					{
+						printf(">>Digite nuevamente la edad MINIMA para utilizar el juguete: ");
+						scanf("%i", &root->min);
+					}
+				}
+				else if (dato==5)
+				{
+					printf("Costo total de fabricacion: $");
+					scanf("%d",&root->costo);
+				}
+				printf("Si desea modificar otro dato, digite 'Si', digite 'No' en caso contrario: ");
+				scanf("%s",&elecc);
+			}
+        }
+
+        /* then recursively process the hijo_der subtree if present. */
+        if (root->hijo_der) 
+        {
+        	buscarJug(root->hijo_der, juguete);
+		}
+    } 
+	else
+	{
+		printf("No hay juguetes!");
+	}
+}
+/*
+void buscarJug(jug *root, char *juguete) //BUSCAR UN JUGUETE
+{
+    if (root!=NULL) 
+	{ 
+        /* If root is not NULL... */
+
+        /* recursively process hijo_izq subtree if present.. */
+       /* if (root->hijo_izq) 
+        {
+        	buscarJug(root->hijo_izq, juguete);
+		}
+		
+        /* then check the current node.. */
+      /*  if (strcmp(root->nombre, juguete)==0) 
 		{
             printf("\n\tJUG-0%d\n", root->codigo); // printing codigo at root
 	        printf("\t(1)Nombre: %s\n", root->nombre);
@@ -1537,17 +1625,16 @@ void buscarJug(jug *root, char *juguete) //BUSCAR UN JUGUETE
         }
 
         /* then recursively process the hijo_der subtree if present. */
-        if (root->hijo_der) 
+     /*   if (root->hijo_der) 
         {
-        	modificarJug(root->hijo_der, juguete);
+        	buscarJug(root->hijo_der, juguete);
 		}
     } 
 	else
 	{
-		printf("\nNo hay juguetes previamente registrados! :(");
+		printf("No hay juguetes!");
 	}
-}
-
+}*/
 
 typedef struct jpedidos
 {
@@ -1582,13 +1669,10 @@ int nuevoP(char *cedula,  char *list_juguetes,char *list_deseos, char *estado, i
 
 int crear_carta()
 {
-//	system("color 01");
+	system("color 01");
 	int opc, verificar, anio, numJuguetes=0, desicion=0, desicion2=1;
 	char  nombre[30], temp_cedula[30], id_nino[12],juguetes[14];
-	
-	struct juguete *root;
-    root=nuevoJuguete(10, "Mazo de cartas", "Juego clasico de cartas", "Juegos de mesa", 99, 7, 3);
-    
+
 	while(opc!=4)
 	{
 	    printf("\n\t\t____________________________________");
@@ -1638,7 +1722,7 @@ int crear_carta()
 					printf("Ingrese el nombre del juguete que desea: ");
 					fflush(stdin);
 					scanf("%[^\n]", &juguetes);
-					buscarJug(root, juguetes);
+					mostrarJuguetes(root);
 				 	
 			    	while (desicion != 1 && desicion != 2)
 					{
@@ -2116,12 +2200,12 @@ void procesar_cartas()
 			if (strcmp(actual_ayudante->cedula, id)==0)
 			{
 				encontrado=1;
+				actual_ayudante->cartasXAyud++;
 			}
 			else
 			{
 				actual_ayudante=actual_ayudante->sig_Ayudante;// siguiente puntero en lista	
 			}
-			
 		}
 	}
 	else
@@ -2161,6 +2245,37 @@ void procesar_cartas()
 
 //*****************Estadisticas**********************************
 // para Estadisticas***
+typedef struct estadisticas
+{
+	char cedula[20];
+	int anio, solicitudes;
+	struct estadisticas* sig_estadistica;
+} estadisticas;
+
+//Variables generales de primer y ultimo miembro
+estadisticas* p = NULL;
+estadisticas* u = NULL;
+
+int nuevaEstadistica(char *cedula, int anio) //Funcion para insertar
+{
+	estadisticas *nuevo=(estadisticas*) malloc(sizeof(estadisticas));
+	
+	strcpy(nuevo->cedula, cedula);
+    nuevo->anio=anio; 
+    nuevo->solicitudes=1;
+
+	if(p==NULL)	
+	{
+		p=nuevo;
+		p->sig_estadistica=NULL;
+		u=nuevo;
+	}
+	u->sig_estadistica=nuevo;
+	nuevo->sig_estadistica=NULL;
+	u=nuevo;
+}
+
+//*************************************************************************
 void cant_compotamientos()
 {
 	int buenos=0,malos=0;
@@ -2180,99 +2295,157 @@ void cant_compotamientos()
 		} 
 		actual = actual->sig_compor;
 	}
-	printf("\n Cantidad de comportamientos BUENOS: -%i- \n",buenos);
-	printf("\n Cantidad de comportamientos MALOS: -%i- \n",malos);
+	printf("\n-Cantidad de comportamientos BUENOS: -%i-",buenos);
+	printf("\n-Cantidad de comportamientos MALOS: -%i- \n",malos);
 }
-//**************************************************
+
+//*************************************************************************
 void aprov_rechazados() 
 {
 	
 	comportamientos *actual=(comportamientos*) malloc(sizeof(comportamientos));
 	actual = primer_compor;
-	comportamientos* actual2=(comportamientos*) malloc(sizeof(comportamientos));
-	actual2=primer_compor;
-	actual2= actual2->sig_compor;
 	
-	int aprov=0, rech=0,cont_0=1,cont_1=0,i=0;
+	estadisticas *actual2=(estadisticas*) malloc(sizeof(estadisticas)); // crea nodos 
+	actual2 = p;
+	
+	int aprov=0, rech=0,malos=0,buenos=0,i=0;
 	
 	while(actual!=NULL) 
 	{
 		while (actual2!=NULL)
 		{
-			if (strcmp(actual->cedu_nino,actual2->cedu_nino)==0)
+			if (strcmp(actual->cedu_nino,actual2->cedula)==0)
 			{
-				if (actual->comportamientos_buenos == actual2->comportamientos_malos)
+				if (actual->comportamientos_buenos == 1) 
 				{
-					cont_1++;
+					buenos++;
+					break;
+				}
+				else
+				{
+					malos++;
+					break;
 				}	
 			}
-			actual2 = actual2->sig_compor;
+			actual2 = actual2->sig_estadistica;
 		}
-		cont_0++;
-		actual2 = primer_compor;
-		while(i < cont_0)
+		if (actual2 == NULL)
 		{
-			actual2=actual2->sig_compor;
-			i++;
+			nuevaEstadistica(actual->cedu_nino, 0);
+			if (actual->comportamientos_buenos == 1) 
+			{
+				buenos++;
+			}
+			else
+			{
+				malos++;
+			}
 		}
-		i=0;
-		
-		if (cont_1 > 6)
-		{
-			rech++;
-		}
-		else aprov++;
-		cont_1=0;
+		actual2 = p;
 		actual = actual->sig_compor;
 	}
+	if (malos > 6)
+	{
+		rech++;
+	}
+	else aprov++;
 	printf("\n Cantidad de ninos con cartas APROBADAS: -%d- ",aprov);
 	printf("\n Cantidad de ninos con cartas RECHAZADAS: -%d- \n",rech);
-}//*****************************************************************************************************************
+}
 
+//*************************************************************************
 int aniosP()//Imprime 
 {
 	jpedidos *actual=(jpedidos*) malloc(sizeof(jpedidos));
 	actual= primer;
 	
-	jpedidos *actual2=(jpedidos*) malloc(sizeof(jpedidos)); // crea nodos 
-	actual2 = primer;
+	estadisticas *actual2=(estadisticas*) malloc(sizeof(estadisticas)); // crea nodos 
+	actual2 = p;
 	
 	int repetido=0 , cont=0;
 	
-	printf("\nCantidad de juguetes solicitados por anio\n");
+	printf("\n-Cantidad de juguetes solicitados por anio\n");
 	if(primer!= NULL)
 	{
 		while(actual != NULL)
 		{
 			while(actual2!=NULL)
 			{
-				if(actual->anio == actual2->anio)
+				if(actual->anio == actual2->anio) 
 				{
-					cont++;
+					actual2->solicitudes++;
+					break;
 				}
-				actual2=actual2->sig;
+				actual2=actual2->sig_estadistica;
 			}
-			
-			printf("Juguetes solicitados en el %d: %d\n",actual->anio, cont );
+			if (actual2 == NULL)
+			{
+				nuevaEstadistica(" ", actual->anio);
+			}
 			actual=actual->sig;
-			actual2 = primer;
-			cont=0;	
+			actual2 = p;
+		}
+		actual2 = p;
+		while(actual2!=NULL)
+		{
+			printf("\tAnio %d: %d\n",actual2->anio, actual2->solicitudes);
+			actual2->anio=0; 
+			actual2->solicitudes=0;
+			actual2=actual2->sig_estadistica;
+		}
+		
+	}
+	else
+	{
+		printf("\t No hay anios registrados.\n");
+	}
+}
+//*************************************************************************
+
+void mJuguetes(struct juguete *root)//recorrido inorden
+{
+	printf("\n-Juguetes mas pedidos\n");
+	
+    if(root!=NULL) // checking if the root is not null
+    {
+        mostrarJuguetes(root->hijo_izq); // visiting hijo_izq child
+        printf("\tNombre: %s", root->nombre);
+        printf(" (categoria: %s)\n", root->categoria);
+        
+        mostrarJuguetes(root->hijo_der);// visiting hijo_der child
+    }
+}
+
+//***********************************************************************
+
+void cartas_x_ayudante()//Imprime 
+{
+	ayudante* actual=(ayudante*) malloc(sizeof(ayudante)); // crea nodos 
+	actual=primer_Ayudante;
+	
+	printf("\n-Cantidad de Cartas Procesadas Segun Ayudante");
+	if(primer_Ayudante!=NULL)
+	{
+		while(actual!=NULL)
+		{
+			printf("\n\t-Nombre: %s (Cartas Procesadas: %i)\n ", actual->nombre, actual->cartasXAyud);
+			actual=actual->sig_Ayudante;// siguiente puntero en lista
 		}
 	}
 	else
 	{
-		printf("\n Anios registrados: 0\n");
+		printf("\n\tUps! Parece que no hay ayudantes registrados\n\n");
 	}
 }
 
-	
-
+//*********************************************************************
 //Principal
 int main (void)
 {
 	int opc;
 	struct juguete *root;
-    root=nuevoJuguete(10, "Mazo de cartas", "Juego clasico de cartas", "Juegos de mesa", 99, 7, 3);
+    root=nuevoJuguete(1, "Mazo de cartas", "Juego clasico de cartas", "Juegos de mesa", 99, 7, 3);
 	
 	while (opc!=10)
 	{
@@ -2327,8 +2500,12 @@ int main (void)
 			}
 			else if(opc==9)
 			{
+				printf("\n\t>>>>> Estadisticas Generales gel Proyecto <<<<<\n");
 				aniosP();
 				cant_compotamientos();
+				aprov_rechazados();
+				mJuguetes(root);
+				cartas_x_ayudante();
 			}
 			else if(opc>11||opc<1)
 			{
